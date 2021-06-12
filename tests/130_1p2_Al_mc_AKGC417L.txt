@@ -1,0 +1,7 @@
+0.697	2.423	normal
+2.423	5.101	normal
+5.101	8.339	both
+8.339	11.28	crackles
+11.28	14.316	both
+14.316	17.03	normal
+17.03	19.554	wheezes
