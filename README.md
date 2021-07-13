@@ -6,3 +6,9 @@ This repo is mainly adapted from [sed_vis - Visualization toolbox for Sound Even
  - Format transformation of input reference.
  - Redefinition of the spectrogram and new definition of the Log-Power spectrogram. 
  - New panel with  the Log-Power spectrogram. 
+
+___
+##20210713 update
+- indicators in the waveform pannel, spectrogram pannel and event pannel
+- clean X-axis
+- pause  
