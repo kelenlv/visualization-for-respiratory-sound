@@ -8,6 +8,9 @@ This repo is mainly adapted from [sed_vis - Visualization toolbox for Sound Even
  - New panel with  the Log-Power spectrogram. 
 
 ___
+## usage:
+place  modified sed_vis.egg-info in Anaconda/Lib/site-packages/, and run tests/test_sed_visualizer.sh
+___
 ##20210713 update
 - indicators in the waveform pannel, spectrogram pannel and event pannel
 - clean X-axis
