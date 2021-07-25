@@ -43,6 +43,8 @@ from matplotlib.widgets import Button, SpanSelector
 from matplotlib.patches import Rectangle
 
 import librosa.display
+import plotly.figure_factory as ff
+import pandas as pd
 
 class EventListVisualizer(object):
     """Event List visualizer.
@@ -182,7 +184,7 @@ class EventListVisualizer(object):
                 signal=audio_signal,
                 sampling_rate=kwargs.get('sampling_rate')
             )
-
+        
         if kwargs.get('mode') not in ['spectrogram', 'time_domain']:
             self.mode = 'spectrogram'
         else:
@@ -231,7 +233,9 @@ class EventListVisualizer(object):
         self.ax2 = None
         self.ax3 = None
         self.ax4 = None
-
+        self.ax5 = None
+        self.ax6 = None
+        
         self.D = None
         self.x = None
         self.timedomain_locations = None
@@ -283,18 +287,21 @@ class EventListVisualizer(object):
         self.waveform_highlight_point_hop = 100
         self.waveform_highlight_color = self.color
 
-        self.selector_panel_height = 25
-        self.highlight_panel_height = 25
-        self.highlight2_panel_height = 25
-        self.event_roll_panel_height = 25
-
+        self.selector_panel_height = 20
+        self.highlight_panel_height = 20
+        self.highlight2_panel_height = 20
+        self.event_roll_panel_height = 5
+        self.display_panel_height = 25
+        
         self.selector_panel_loc = 0
-        self.highlight_panel_loc = 26
-        self.highlight2_panel_loc = 52
-        self.event_roll_panel_loc = 78
+        self.highlight_panel_loc = 21
+        self.highlight2_panel_loc = 42
+        self.event_roll_panel_loc = 63
+        self.display_panel_loc = 84
+        
 
         self.event_roll_item_opacity = 0.5
-        self.fig_shape = (14, 6)
+        self.fig_shape = (14, 10)
 
         self._quit = False
 
@@ -367,7 +374,7 @@ class EventListVisualizer(object):
 
         self.label_colormap = cm.get_cmap(name=kwargs.get('event_roll_cmap','rainbow'))
 
-    def generate_GUI(self):
+    def generate_GUI(self, df):
         """Generates the visualizer GUI.
 
         """
@@ -680,16 +687,18 @@ class EventListVisualizer(object):
                     span += 0.15
         
         # Display panel 
-        # ====================================
-#        self.ax4 = plt.subplot2grid(shape=(100, 1), loc=(self.highlight2_panel_loc, 0), rowspan=self.highlight2_panel_height, colspan=1)
-#        # 演示表格参数
-#        ddata = [[1, 1], [1, 1]]
-#        self.ax4.table(cellText=ddata, cellColours=[['grey', 'grey'], ['grey', 'red']], cellLoc='center', colWidths=[0.1, 0.1],
-#                      rowLabels=['a', 'b'], rowColours=['blue', 'blue'], rowLoc='center', colLabels=['A', 'B'],
-#                      colColours=['green', 'green'], colLoc='left', loc='bottom right', bbox=None, edges='closed')
-#        # 隐藏x轴刻度，以防遮盖表格
-#        self.ax4.set_xticks([])
-#        self.ax4.set_title("test")
+        # ====================================    
+        self.ax5 = plt.subplot2grid(shape=(100, 1), loc=(self.display_panel_loc, 0), rowspan=self.display_panel_height, colspan=1)   
+#        plt.text(0, 1, self._event_lists.get('reference').to_string(show_info=False,show_data=False,show_stats=True) , fontsize=12, style='oblique', ha='center',va='top',wrap=True)
+        self.ax5.axis("off")
+        self.ax5.axis("tight")
+#        self.ax5 = plt.subplot2grid(shape=(100, 2), loc=(self.display_panel_loc, 0.5), rowspan=self.display_panel_height, colspan=2)
+        self.ax5.table(cellText=df.values, colLabels=df.columns,  cellLoc='center',loc='best')
+#    
+        self.ax5.set_xticks([])
+        self.ax5.set_yticks([])
+#        plt.ylabel('test', fontsize=self.panel_title_font_size)
+#        self.ax5.yaxis.set_label_position('right')
 
         
         
@@ -756,11 +765,11 @@ class EventListVisualizer(object):
         if self.auto_play:
             self.on_play(None)
 
-    def show(self):
+    def show(self,df):
         """Shows the visualizer.
 
         """
-        self.generate_GUI()
+        self.generate_GUI(df)
         plt.show()
 
     def save(self, filename=None):
@@ -1193,32 +1202,32 @@ class EventListVisualizer(object):
                               shape=(n_fft, n_frames),
                               strides=(audio.itemsize, int(hop_length * audio.itemsize)))
 
-#        S = numpy.empty((int(1 + n_fft // 2), y_frames.shape[1]), dtype=numpy.complex64, order='F')
-#
-#        max_memory_block = 2**8 * 2**10
-#        n_columns = int(max_memory_block / (S.shape[0] * S.itemsize))
-#
-#        for bl_s in range(0, S.shape[1], n_columns):
-#            bl_t = min(bl_s + n_columns, S.shape[1])
-#
-#            # RFFT and Conjugate here to match phase from DPWE code
-#            S[:, bl_s:bl_t] = scipy.fftpack.fft(fft_window * y_frames[:, bl_s:bl_t], axis=0)[:S.shape[0]].conj()
-#
-#        magnitude = numpy.abs(S) ** 2
-#        
+        S = numpy.empty((int(1 + n_fft // 2), y_frames.shape[1]), dtype=numpy.complex64, order='F')
 
-#        ref = numpy.max(magnitude)
-#        amin=1e-10
-#        top_db = 80.0
-#
-#        log_spec = 10.0 * numpy.log10(numpy.maximum(amin, magnitude))
-#        log_spec -= 10.0 * numpy.log10(numpy.maximum(amin, ref))
+        max_memory_block = 2**8 * 2**10
+        n_columns = int(max_memory_block / (S.shape[0] * S.itemsize))
 
-#        log_spec = numpy.maximum(log_spec, log_spec.max() - top_db)
+        for bl_s in range(0, S.shape[1], n_columns):
+            bl_t = min(bl_s + n_columns, S.shape[1])
+
+            # RFFT and Conjugate here to match phase from DPWE code
+            S[:, bl_s:bl_t] = scipy.fftpack.fft(fft_window * y_frames[:, bl_s:bl_t], axis=0)[:S.shape[0]].conj()
+
+        magnitude = numpy.abs(S) ** 2
         
-#        librosa.power_to_db(S ** 2, ref=numpy.max)
-#        print('example:',log_spec)
-        return y_frames #log_spec
+
+        ref = numpy.max(magnitude)
+        amin=1e-10
+        top_db = 80.0
+
+        log_spec = 10.0 * numpy.log10(numpy.maximum(amin, magnitude))
+        log_spec -= 10.0 * numpy.log10(numpy.maximum(amin, ref))
+
+        log_spec = numpy.maximum(log_spec, log_spec.max() - top_db)
+        
+        librosa.power_to_db(S ** 2, ref=numpy.max)
+        print('example:',log_spec)
+        return  log_spec #y_frames
     
     @staticmethod
     def get_intensity(audio,sampling_rate, n_fft=256, win_length=1024, hop_length=1024):
@@ -1243,19 +1252,24 @@ class EventListVisualizer(object):
 
             # RFFT and Conjugate here to match phase from DPWE code
             S[:, bl_s:bl_t] = scipy.fftpack.fft(fft_window * y_frames[:, bl_s:bl_t], axis=0)[:S.shape[0]].conj()
-
+#        print(S)
+        print(numpy.max(S).real)
         magnitude = numpy.abs(S) ** 2
-        ref = numpy.max(magnitude)        
-        db=librosa.power_to_db(magnitude, ref)
+#        print(magnitude)
+        ref = numpy.max(magnitude)  
+#        print(ref)
+        db=librosa.power_to_db(magnitude, ref)#10*log10(magnitude/ref)
+#        print(numpy.max(db))
 #        print('what??',db)
         return db
     
     @staticmethod
-    def plot_spectrogram(data, sampling_rate, n_yticks=5, interpolation='nearest', cmap='magma'):
+    def plot_spectrogram(data, sampling_rate=44100, n_yticks=5, interpolation='nearest', cmap='magma'):
 #        print(data)
-        axes = librosa.display.specshow(numpy.abs(librosa.stft(data)), sr=sampling_rate, x_axis='time', y_axis='log')
+        axes = librosa.display.specshow(numpy.abs(librosa.stft(data)), sr=sampling_rate, y_axis='log')#, x_axis='time'
 #        axes = plt.imshow(data, aspect='auto', origin='lower', interpolation=interpolation, cmap=plt.get_cmap(cmap))
-
+        print('Here!')
+        print(numpy.abs(librosa.stft(data)).shape)
         # X axis
         plt.xticks([])
 
