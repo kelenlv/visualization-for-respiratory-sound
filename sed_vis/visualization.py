@@ -28,7 +28,7 @@ import scipy.fftpack
 import scipy.signal
 from numpy.lib.stride_tricks import as_strided
 from sys import platform as _platform
-import matplotlib
+#import matplotlib
 # if _platform == "darwin":
 #     # MAC OS X
 #     matplotlib.use('TkAgg')
@@ -1253,7 +1253,7 @@ class EventListVisualizer(object):
             # RFFT and Conjugate here to match phase from DPWE code
             S[:, bl_s:bl_t] = scipy.fftpack.fft(fft_window * y_frames[:, bl_s:bl_t], axis=0)[:S.shape[0]].conj()
 #        print(S)
-        print(numpy.max(S).real)
+#        print(numpy.max(S).real)
         magnitude = numpy.abs(S) ** 2
 #        print(magnitude)
         ref = numpy.max(magnitude)  
@@ -1265,14 +1265,17 @@ class EventListVisualizer(object):
     
     @staticmethod
     def plot_spectrogram(data, sampling_rate=44100, n_yticks=5, interpolation='nearest', cmap='magma'):
-#        print(data)
-        axes = librosa.display.specshow(numpy.abs(librosa.stft(data)), sr=sampling_rate, y_axis='log')#, x_axis='time'
+#        print(a.shape)#(1025,1723)
+#        print(b.shape)#(1025,1723)
+#        print(c.shape)#(1723,1025)
+#        print(b[0].shape)#(1723,)
+        ######## spectrogram##############
+#        axes = librosa.display.specshow(numpy.abs(librosa.stft(data)), sr=sampling_rate, y_axis='log')#, x_axis='time'
 #        axes = plt.imshow(data, aspect='auto', origin='lower', interpolation=interpolation, cmap=plt.get_cmap(cmap))
-        print('Here!')
-        print(numpy.abs(librosa.stft(data)).shape)
+#        print('Here!')
+#        print(numpy.abs(librosa.stft(data)).shape)
         # X axis
-        plt.xticks([])
-
+#        plt.xticks([])
         # Y axis
 #        positions = numpy.linspace(0, data.shape[0]-1, n_yticks, endpoint=True).astype(int)
 #        values = numpy.linspace(0, 0.5 * sampling_rate, data.shape[0], endpoint=True).astype(int)
@@ -1286,8 +1289,19 @@ class EventListVisualizer(object):
 #        plt.yticks(positions, values[t_inv[positions]])
 #        plt.yticks([])
 
+
+        ############### new ######################
+        n_fft=1048
+        a=numpy.abs(librosa.stft(data,n_fft))#a.shape=(1 + n_fft/2, n_frames),where n_fft= 2048 is default
+        c=numpy.transpose(a)
+#        axes= plt.hist(c[500])
+        x=numpy.arange(0,int(n_fft/2)+1)
+        x[0]=1
+        plt.xticks(numpy.arange(1,int(n_fft/2),10))
+        axes=plt.plot(x,c[500])
+#        print(c[500])
         return axes
-    
+     
     @staticmethod
     def plot_intensity(data, sampling_rate, n_yticks=5, interpolation='nearest', cmap='magma'):    
         axes = librosa.display.specshow(data,
