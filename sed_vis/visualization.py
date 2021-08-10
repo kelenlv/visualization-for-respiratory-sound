@@ -27,7 +27,7 @@ import time
 import scipy.fftpack
 import scipy.signal
 from numpy.lib.stride_tricks import as_strided
-from sys import platform as _platform
+#from sys import platform as _platform
 #import matplotlib
 # if _platform == "darwin":
 #     # MAC OS X
@@ -43,8 +43,9 @@ from matplotlib.widgets import Button, SpanSelector
 from matplotlib.patches import Rectangle
 
 import librosa.display
-import plotly.figure_factory as ff
-import pandas as pd
+#import plotly.figure_factory as ff
+#import pandas as pd
+import numpy as np
 
 class EventListVisualizer(object):
     """Event List visualizer.
@@ -198,7 +199,7 @@ class EventListVisualizer(object):
         self.spec_cmap = kwargs.get('spec_cmap', 'magma')
         self.spec_interpolation =  kwargs.get('spec_interpolation', 'nearest')
 
-        self.color = kwargs.get('color', '#339933')
+        self.color = kwargs.get('color', '#339933')#green indicator
 
         self.button_color = {
             'off': 'grey',
@@ -236,6 +237,9 @@ class EventListVisualizer(object):
         self.ax5 = None
         self.ax6 = None
         
+#        self.xdata = [] 
+#        self.ydata = [] 
+#        self.ln=None
         self.D = None
         self.x = None
         self.timedomain_locations = None
@@ -294,10 +298,10 @@ class EventListVisualizer(object):
         self.display_panel_height = 25
         
         self.selector_panel_loc = 0
-        self.highlight_panel_loc = 21
-        self.highlight2_panel_loc = 42
-        self.event_roll_panel_loc = 63
-        self.display_panel_loc = 84
+        self.highlight_panel_loc = 22
+        self.highlight2_panel_loc = 49
+        self.event_roll_panel_loc = 71
+        self.display_panel_loc = 91
         
 
         self.event_roll_item_opacity = 0.5
@@ -305,72 +309,72 @@ class EventListVisualizer(object):
 
         self._quit = False
 
-        if self.publication_mode:
-            self.panel_title_font_size = 14
-            self.legend_font_size = 16
-            self.event_roll_time_font_size = 12
-
-            self.spec_cmap = 'magma_r'
-            self.spec_interpolation = 'bicubic'
-            if not self.waveform_selector_point_hop:
-                self.waveform_selector_point_hop = 5000
-            self.waveform_highlight_point_hop = 500
-            self.waveform_highlight_color = 'black'
-            if self.show_selector:
-                if self.mode == 'time_domain':
-                    self.fig_shape = (30, 4)
-
-                elif self.mode == 'spectrogram':
-                    self.fig_shape = (20, 5)
-
-                if self._event_lists:
-                    if self.event_label_count == 1:
-                        self.selector_panel_height = 10
-                        self.highlight_panel_height = 33
-                        self.event_roll_panel_height = 33
-
-                        self.selector_panel_loc = 0
-                        self.highlight_panel_loc = 17
-                        self.event_roll_panel_loc = 53
-
-                        self.event_roll_time_font_size = 16
-
-                    else:
-                        self.selector_panel_height = 10
-                        self.highlight_panel_height = 15
-                        self.event_roll_panel_height = 60
-
-                        self.selector_panel_loc = 0
-                        self.highlight_panel_loc = 17
-                        self.event_roll_panel_loc = 35
-
-                else:
-                    self.selector_panel_height = 30
-                    self.highlight_panel_height = 66
-                    self.event_roll_panel_height = 0
-
-                    self.selector_panel_loc = 0
-                    self.highlight_panel_loc = 37
-                    self.event_roll_panel_loc = 0
-
-                    self.event_roll_time_font_size = 16
-
-            else:
-                if self.mode == 'time_domain':
-                    self.fig_shape = (30, 4)
-
-                elif self.mode == 'spectrogram':
-                    self.fig_shape = (20, 4)
-
-                self.selector_panel_height = 15
-                self.highlight_panel_height = 15
-                self.event_roll_panel_height = 75
-
-                self.selector_panel_loc = 0
-                self.highlight_panel_loc = 0
-                self.event_roll_panel_loc = 17
-
-            self.event_roll_item_opacity = 1.0
+#        if self.publication_mode:
+#            self.panel_title_font_size = 14
+#            self.legend_font_size = 16
+#            self.event_roll_time_font_size = 12
+#
+#            self.spec_cmap = 'magma_r'
+#            self.spec_interpolation = 'bicubic'
+#            if not self.waveform_selector_point_hop:
+#                self.waveform_selector_point_hop = 5000
+#            self.waveform_highlight_point_hop = 500
+#            self.waveform_highlight_color = 'black'
+#            if self.show_selector:
+#                if self.mode == 'time_domain':
+#                    self.fig_shape = (30, 4)
+#
+#                elif self.mode == 'spectrogram':
+#                    self.fig_shape = (20, 5)
+#
+#                if self._event_lists:
+#                    if self.event_label_count == 1:
+#                        self.selector_panel_height = 10
+#                        self.highlight_panel_height = 33
+#                        self.event_roll_panel_height = 33
+#
+#                        self.selector_panel_loc = 0
+#                        self.highlight_panel_loc = 17
+#                        self.event_roll_panel_loc = 53
+#
+#                        self.event_roll_time_font_size = 16
+#
+#                    else:
+#                        self.selector_panel_height = 10
+#                        self.highlight_panel_height = 15
+#                        self.event_roll_panel_height = 60
+#
+#                        self.selector_panel_loc = 0
+#                        self.highlight_panel_loc = 17
+#                        self.event_roll_panel_loc = 35
+#
+#                else:
+#                    self.selector_panel_height = 30
+#                    self.highlight_panel_height = 66
+#                    self.event_roll_panel_height = 0
+#
+#                    self.selector_panel_loc = 0
+#                    self.highlight_panel_loc = 37
+#                    self.event_roll_panel_loc = 0
+#
+#                    self.event_roll_time_font_size = 16
+#
+#            else:
+#                if self.mode == 'time_domain':
+#                    self.fig_shape = (30, 4)
+#
+#                elif self.mode == 'spectrogram':
+#                    self.fig_shape = (20, 4)
+#
+#                self.selector_panel_height = 15
+#                self.highlight_panel_height = 15
+#                self.event_roll_panel_height = 75
+#
+#                self.selector_panel_loc = 0
+#                self.highlight_panel_loc = 0
+#                self.event_roll_panel_loc = 17
+#
+#            self.event_roll_item_opacity = 1.0
 
         self.label_colormap = cm.get_cmap(name=kwargs.get('event_roll_cmap','rainbow'))
 
@@ -461,34 +465,36 @@ class EventListVisualizer(object):
 #            self.ax1.set_ylim(-1, 1)
 #            plt.title(self.labels['waveform'], fontsize=self.panel_title_font_size)
 
-        # Highlight panel
-        # ====================================
+#        # Highlight panel
+#        # ====================================
         self.ax2 = plt.subplot2grid(shape=(100, 1), loc=(self.highlight_panel_loc, 0), rowspan=self.highlight_panel_height, colspan=1)
-        if self.mode == 'spectrogram':
-#            self.D = self.get_spectrogram(
-#                audio=self.audio.signal,
-#                n_fft=self.spec_fft_size,
-#                win_length=self.spec_win_size,
-#                hop_length=self.spec_hop_size
+        self.ax2.set_ylim(0,1000)
+#        self.ln, = self.ax2.plot([],[],'r-',animated=False)
+#        if self.mode == 'spectrogram':
+##            self.D = self.get_spectrogram(
+##                audio=self.audio.signal,
+##                n_fft=self.spec_fft_size,
+##                win_length=self.spec_win_size,
+##                hop_length=self.spec_hop_size
+##            )
+#
+#            self.plot_spectrogram(
+#                data=self.audio.signal,
+#                sampling_rate=self.audio.fs,
+#                interpolation=self.spec_interpolation,
+#                cmap=self.spec_cmap
 #            )
-
-            self.plot_spectrogram(
-                data=self.audio.signal,
-                sampling_rate=self.audio.fs,
-                interpolation=self.spec_interpolation,
-                cmap=self.spec_cmap
-            )
-            if not self.publication_mode:
-                self.ax2.yaxis.grid(False, which='major')
-                self.ax2.yaxis.grid(False, which='minor')
-                self.ax2.xaxis.grid(False, which='major')
-                self.ax2.xaxis.grid(False, which='minor')
-
-                plt.ylabel(self.labels['spectrogram'], fontsize=self.panel_title_font_size)
-            else:
-                self.ax2.get_yaxis().set_visible(False)
-                            
-
+#            if not self.publication_mode:
+#                self.ax2.yaxis.grid(False, which='major')
+#                self.ax2.yaxis.grid(False, which='minor')
+#                self.ax2.xaxis.grid(False, which='major')
+#                self.ax2.xaxis.grid(False, which='minor')
+#
+#                plt.ylabel(self.labels['spectrogram'], fontsize=self.panel_title_font_size)
+#            else:
+#                self.ax2.get_yaxis().set_visible(False)
+#                            
+#
         self.ax2.yaxis.set_label_position("right")
         
         
@@ -841,8 +847,9 @@ class EventListVisualizer(object):
             self.animation_event_roll_panel = animation.FuncAnimation(
                 self.fig,
                 self.event_roll_panel_play_indicator_update,
+#                frames= np.arange(self.audio.signal.shape[0]),
                 init_func=self.event_roll_panel_play_indicator_init,
-                interval=10,
+#                interval=50,
                 blit=self.use_blit,
                 repeat=False
             )
@@ -850,8 +857,9 @@ class EventListVisualizer(object):
             self.animation_selector_panel = animation.FuncAnimation(
                 self.fig,
                 self.selector_panel_play_indicator_update,
+#                frames= np.arange(self.audio.signal.shape[0]/self.audio.fs),# t=20s
                 init_func=self.selector_panel_play_indicator_init,
-                interval=10,
+#                interval=50,
                 blit=self.use_blit,
                 repeat=False
             )
@@ -859,17 +867,28 @@ class EventListVisualizer(object):
             self.animation_highlight_panel = animation.FuncAnimation(
                 self.fig,
                 self.highlight_panel_play_indicator_update,
+#                frames= np.arange(self.audio.signal.shape[0]/self.audio.fs),# t=20s
                 init_func=self.highlight_panel_play_indicator_init,
-                interval=10,
+#                interval=50,
                 blit=self.use_blit,
                 repeat=False
             )
+#            self.animation_highlight_panel = animation.FuncAnimation(
+#                   self.fig, 
+#                   self.highlight_panel_play_indicator_update,
+#                   frames=np.linspace(0, 2*np.pi, 128),     #这里的frames在调用update函数是会将frames作为实参传递给“n”
+#                   init_func=self.highlight_panel_play_indicator_init,
+#                   interval=50,
+#                   blit=self.use_blit,
+#                   repeat=False)
+    
             
             self.animation_highlight2_panel = animation.FuncAnimation(
                 self.fig,
                 self.highlight2_panel_play_indicator_update,
+#                frames= np.arange(self.audio.signal.shape[0]/self.audio.fs),# t=20s
                 init_func=self.highlight2_panel_play_indicator_init,
-                interval=10,
+#                interval=50,
                 blit=self.use_blit,
                 repeat=False
             )
@@ -977,8 +996,9 @@ class EventListVisualizer(object):
         self.animation_event_roll_panel = animation.FuncAnimation(
             self.fig,
             self.event_roll_panel_play_indicator_update,
+#            frames= np.arange(self.audio.signal.shape[0]),
             init_func=self.event_roll_panel_play_indicator_init,
-            interval=50,
+#            interval=50,
             blit=self.use_blit,
             repeat=False
         )
@@ -986,8 +1006,9 @@ class EventListVisualizer(object):
         self.animation_selector_panel = animation.FuncAnimation(
             self.fig,
             self.selector_panel_play_indicator_update,
+#            frames= np.arange(self.audio.signal.shape[0]/self.audio.fs),# t=20s
             init_func=self.selector_panel_play_indicator_init,
-            interval=50,
+#            interval=50,
             blit=self.use_blit,
             repeat=False
         )
@@ -995,16 +1016,27 @@ class EventListVisualizer(object):
         self.animation_highlight_panel = animation.FuncAnimation(
             self.fig,
             self.highlight_panel_play_indicator_update,
+#            frames= np.arange(self.audio.signal.shape[0]/self.audio.fs),# t=20s
             init_func=self.highlight_panel_play_indicator_init,
-            interval=50,
+#            interval=50,
             blit=self.use_blit,
             repeat=False
         )
+#        self.animation_highlight_panel = animation.FuncAnimation(
+#           self.fig, 
+#           self.highlight_panel_play_indicator_update,
+#           frames=np.linspace(0, 2*np.pi, 128),     #这里的frames在调用update函数是会将frames作为实参传递给“n”
+#           init_func=self.highlight_panel_play_indicator_init,
+#           interval=50,
+#           blit=self.use_blit,
+#           repeat=False)
+    
         self.animation_highlight2_panel = animation.FuncAnimation(
             self.fig,
             self.highlight2_panel_play_indicator_update,
+#            frames= np.arange(self.audio.signal.shape[0]/self.audio.fs),# t=20s
             init_func=self.highlight2_panel_play_indicator_init,
-            interval=50,
+#            interval=50,
             blit=self.use_blit,
             repeat=False
         )
@@ -1058,6 +1090,7 @@ class EventListVisualizer(object):
         return self.event_panel_indicator_line,
 
     def event_roll_panel_play_indicator_update(self, i):
+#        print(i)#96
         if self.audio.playing:
             self.event_panel_indicator_line.set_x(self.playback_offset + self.audio.get_time())
         else:
@@ -1083,7 +1116,7 @@ class EventListVisualizer(object):
         self.ax1.add_patch(self.selector_panel_indicator_line)
         return self.selector_panel_indicator_line,
 
-    def selector_panel_play_indicator_update(self, i):
+    def selector_panel_play_indicator_update(self,i):
         if self.audio.playing:
             self.selector_panel_indicator_line.set_x((self.playback_offset + self.audio.get_time())*self.audio.fs)
         else:
@@ -1095,51 +1128,55 @@ class EventListVisualizer(object):
         return self.selector_panel_indicator_line,
 
     def highlight_panel_play_indicator_init(self):
-        indicator_width = 0.5
-        if self.mode == 'spectrogram':
-            indicator_height = self.spec_fft_size
-            indicator_y = 0
 
-        else:
-            indicator_height = 2
-            indicator_y = -1
+#        return self.ln,               #返回曲线
+        self.ax2 = plt.subplot2grid(shape=(100, 1), loc=(self.highlight_panel_loc, 0), rowspan=self.highlight_panel_height, colspan=1)                    
+        self.ax2.yaxis.set_label_position("right")
+#        self.ax2.set_xlim(0, 2*np.pi)
+        self.ax2.set_ylim(0,1000)
+        return self.ax2,
+#        else:
+#            self.highlight_panel_indicator_line.set_visible(False)
+                            
 
-        self.highlight_panel_indicator_line = patches.Rectangle(
-            (0, indicator_y),
-            height=indicator_height,
-            width=indicator_width,
-            edgecolor=self.indicator_line_color,
-            facecolor=self.indicator_line_color,
-            alpha=0.8
-        )
 
-        self.ax2.add_patch(self.highlight_panel_indicator_line)
-        return self.highlight_panel_indicator_line,
-
-    def highlight_panel_play_indicator_update(self, i):
+    def highlight_panel_play_indicator_update(self, n):
+#        print(n)
+#        print('I am in')
+#        self.xdata.append(n)         #将每次传过来的n追加到xdata中
+#        self.ydata.append(np.sin(n))
+#        self.ln.set_data(self.xdata, self.ydata)    #重新设置曲线的值
+#        return self.ln
         if self.audio.playing:
             if self.mode == 'spectrogram':
-                self.highlight_panel_indicator_line.set_x(
-                    (self.playback_offset + self.audio.get_time()) * self.audio.fs / float(self.spec_hop_size)
+    #            self.D = self.get_spectrogram(
+    #                audio=self.audio.signal,
+    #                n_fft=self.spec_fft_size,
+    #                win_length=self.spec_win_size,
+    #                hop_length=self.spec_hop_size
+    #            )
+                self.plot_spectrogram(
+                    data=self.audio.signal, t=n,
+                    sampling_rate=self.audio.fs,
+                    interpolation=self.spec_interpolation,
+                    cmap=self.spec_cmap                 
                 )
-
-            elif self.mode == 'time_domain':
-                self.highlight_panel_indicator_line.set_x(
-                    (self.playback_offset + self.audio.get_time()) * self.audio.fs
-                )
-
-        else:
-            self.highlight_panel_indicator_line.set_visible(False)
-            if self.animation_highlight_panel is not None:
-                self.animation_highlight_panel.event_source.stop()
-                self.animation_highlight_panel = None
-
-        return self.highlight_panel_indicator_line,
+                if not self.publication_mode:
+                    self.ax2.yaxis.grid(False, which='major')
+                    self.ax2.yaxis.grid(False, which='minor')
+                    self.ax2.xaxis.grid(False, which='major')
+                    self.ax2.xaxis.grid(False, which='minor')
+    
+                    plt.ylabel(self.labels['spectrogram'], fontsize=self.panel_title_font_size)
+                else:
+                    self.ax2.get_yaxis().set_visible(False)
+            
+        return self.ax2,
     
     def highlight2_panel_play_indicator_init(self):
         indicator_width = 0.5
         if self.mode == 'spectrogram':
-            indicator_height = self.spec_fft_size
+            indicator_height = 16384 #self.spec_fft_size
             indicator_y = 0
         else:
             indicator_height = 3
@@ -1264,7 +1301,7 @@ class EventListVisualizer(object):
         return db
     
     @staticmethod
-    def plot_spectrogram(data, sampling_rate=44100, n_yticks=5, interpolation='nearest', cmap='magma'):
+    def plot_spectrogram( data, t, sampling_rate=44100, n_yticks=5, interpolation='nearest', cmap='magma'):
 #        print(a.shape)#(1025,1723)
 #        print(b.shape)#(1025,1723)
 #        print(c.shape)#(1723,1025)
@@ -1288,19 +1325,19 @@ class EventListVisualizer(object):
 #
 #        plt.yticks(positions, values[t_inv[positions]])
 #        plt.yticks([])
-
-
         ############### new ######################
-        n_fft=1048
+        n_fft=1024
         a=numpy.abs(librosa.stft(data,n_fft))#a.shape=(1 + n_fft/2, n_frames),where n_fft= 2048 is default
-        c=numpy.transpose(a)
-#        axes= plt.hist(c[500])
+        c=numpy.transpose(a)#(3446,513)
         x=numpy.arange(0,int(n_fft/2)+1)
         x[0]=1
-        plt.xticks(numpy.arange(1,int(n_fft/2),10))
-        axes=plt.plot(x,c[500])
+        plt.xticks(numpy.arange(1,int(n_fft/2),10))#512
+       
+        axes = plt.cla()
+        axes=plt.plot(x,c[int(np.floor(t*sampling_rate*0.2/256))])#
+#        axes  = plt.hist(c[int(np.floor(t*sampling_rate*0.2/256))])
 #        print(c[500])
-        return axes
+        return axes 
      
     @staticmethod
     def plot_intensity(data, sampling_rate, n_yticks=5, interpolation='nearest', cmap='magma'):    
