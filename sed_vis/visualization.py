@@ -47,7 +47,9 @@ import librosa.display
 #import pandas as pd
 import numpy as np
 
+pause = True
 class EventListVisualizer(object):
+    
     """Event List visualizer.
 
     Examples
@@ -211,7 +213,7 @@ class EventListVisualizer(object):
             'close': 'Close',
             'play': 'Play',
             'pause': 'Pause',
-            'stop': 'Stop',
+            'stop': 'Reset',
             'quit': 'Quit',
             'selection': 'Selection',
             'waveform': 'Waveform',
@@ -236,6 +238,8 @@ class EventListVisualizer(object):
         self.ax4 = None
         self.ax5 = None
         self.ax6 = None
+        
+        self.ln = None
         
 #        self.xdata = [] 
 #        self.ydata = [] 
@@ -394,11 +398,6 @@ class EventListVisualizer(object):
         if self.show_selector:
             self.ax1 = plt.subplot2grid(shape=(100, 1), loc=(self.selector_panel_loc, 0), rowspan=self.selector_panel_height, colspan=1)
             self.timedomain_locations = numpy.arange(0, self.audio.signal.shape[0])
-    #            print(self.audio.signal.shape[0])882000
-    #            self.ax1.fill_between(
-    #                self.x[::self.waveform_selector_point_hop], self.audio.signal[::self.waveform_selector_point_hop], -self.audio.signal[::self.waveform_selector_point_hop],
-    #                color='0.5'
-    #            )
             self.ax1.fill_between(
                 self.timedomain_locations[::self.waveform_selector_point_hop],
                 self.audio.signal[::self.waveform_selector_point_hop],
@@ -408,16 +407,6 @@ class EventListVisualizer(object):
     
             self.ax1.set_ylim(-1, 1)
             self.ax1.set_xlim(self.x[0],self.x[-1])
-    #                    self.timedomain_locations[0], self.timedomain_locations[-1])
-            
-    #            segment_begin = self.x[0] / float(self.audio.fs)
-    #            segment_end = self.x[-1] / float(self.audio.fs)
-    #
-    #            locs = numpy.arange(segment_begin, segment_end)
-    #            plt.xlim([locs[0], locs[-1]])
-    #            self.time_ticks(locations=locs, n_ticks=10)
-    
-    #            plt.yticks([])
             plt.xticks([])
             self.ax1.yaxis.grid(False, which='major')
             self.ax1.yaxis.grid(False, which='minor')
@@ -430,71 +419,11 @@ class EventListVisualizer(object):
     #            self.ax1.set_xlim(self.timedomain_locations[0], self.timedomain_locations[-1])
     #            self.ax1.set_xlim(self.begin_time, self.end_time)
             self.ax1.yaxis.set_label_position("right")
-#==========    
-            
-#            self.ax1 = plt.subplot2grid(shape=(100, 1), loc=(self.selector_panel_loc, 0), rowspan=self.selector_panel_height, colspan=1)
-#
-#            self.timedomain_locations = numpy.arange(0, self.audio.signal.shape[0])
-#
-#            self.ax1.fill_between(
-#                self.timedomain_locations[::self.waveform_selector_point_hop],
-#                self.audio.signal[::self.waveform_selector_point_hop],
-#                -self.audio.signal[::self.waveform_selector_point_hop],
-#                color='0.5'
-#            )
-#
-##            plt.yticks([])
-#            plt.axis('tight')
-#
-#            
-#
-##            self.time_ticks(
-##                locations=self.timedomain_locations,
-##                n_ticks=10,
-##                sampling_rate=self.audio.fs
-##            )
-#
-#            self.ax1.yaxis.grid(True, which='major')
-#            self.ax1.yaxis.grid(True, which='minor')
-#            self.ax1.xaxis.grid(True, which='major')
-#            self.ax1.xaxis.grid(True, which='minor')
-#            self.ax1.yaxis.set_label_position("right")
-#            
-#            self.ax1.set_xlim(self.timedomain_locations[0], self.timedomain_locations[-1])
-##            self.ax1.set_xlim(self.x[0], self.x[-1])
-#            self.ax1.set_ylim(-1, 1)
-#            plt.title(self.labels['waveform'], fontsize=self.panel_title_font_size)
 
 #        # Highlight panel
 #        # ====================================
         self.ax2 = plt.subplot2grid(shape=(100, 1), loc=(self.highlight_panel_loc, 0), rowspan=self.highlight_panel_height, colspan=1)
-        self.ax2.set_ylim(0,1000)
-#        self.ln, = self.ax2.plot([],[],'r-',animated=False)
-#        if self.mode == 'spectrogram':
-##            self.D = self.get_spectrogram(
-##                audio=self.audio.signal,
-##                n_fft=self.spec_fft_size,
-##                win_length=self.spec_win_size,
-##                hop_length=self.spec_hop_size
-##            )
-#
-#            self.plot_spectrogram(
-#                data=self.audio.signal,
-#                sampling_rate=self.audio.fs,
-#                interpolation=self.spec_interpolation,
-#                cmap=self.spec_cmap
-#            )
-#            if not self.publication_mode:
-#                self.ax2.yaxis.grid(False, which='major')
-#                self.ax2.yaxis.grid(False, which='minor')
-#                self.ax2.xaxis.grid(False, which='major')
-#                self.ax2.xaxis.grid(False, which='minor')
-#
-#                plt.ylabel(self.labels['spectrogram'], fontsize=self.panel_title_font_size)
-#            else:
-#                self.ax2.get_yaxis().set_visible(False)
-#                            
-#
+        plt.ylabel(self.labels['spectrogram'], fontsize=self.panel_title_font_size)
         self.ax2.yaxis.set_label_position("right")
         
         
@@ -507,15 +436,16 @@ class EventListVisualizer(object):
         self.end_time = self.x[-1] / float(self.audio.fs)
 
         if self.mode == 'spectrogram':            
-            self.DD = self.get_intensity(
+            self.DD, self.mdf = self.get_intensity(
                 audio=self.audio.signal,
                 sampling_rate=self.audio.fs,
                 n_fft=self.spec_fft_size,
                 win_length=self.spec_win_size,
                 hop_length=self.spec_hop_size
             )
+#            print('#mdf:',self.mdf[500][3000])#size:513*3446
 #            print(self.audio.fs,self.spec_interpolation)
-            self.plot_intensity(
+            self.plot_intensity(self,
                 self.DD,
                 sampling_rate=self.audio.fs,
                 interpolation=self.spec_interpolation,
@@ -684,7 +614,7 @@ class EventListVisualizer(object):
                         ax_legend_color,
                         '',
                         color=m.to_rgba(event_list_id),
-                        hovercolor=m.to_rgba(event_list_id)
+#                        hovercolor=m.to_rgba(event_list_id)
                     )
 
                     ax_legend_label = plt.axes([0.225+0.025+span, 0.02, 0.10, 0.04])
@@ -706,7 +636,6 @@ class EventListVisualizer(object):
 #        plt.ylabel('test', fontsize=self.panel_title_font_size)
 #        self.ax5.yaxis.set_label_position('right')
 
-        
         
         if self.show_selector:
             self.slider_time = SpanSelector(
@@ -736,27 +665,27 @@ class EventListVisualizer(object):
                 ax_play,
                 self.labels['play'],
                 color=self.button_color['off'],
-                hovercolor=self.button_color['on']
+#                hovercolor=self.button_color['on']
             )
             self.button_pause = Button(
                 ax_pause,
                 self.labels['pause'],
                 color=self.button_color['off'],
-                hovercolor=self.button_color['on']
+#                hovercolor=self.button_color['on']
             )
 
             self.button_stop = Button(
                 ax_stop,
                 self.labels['stop'],
                 color=self.button_color['off'],
-                hovercolor=self.button_color['on']
+#                hovercolor=self.button_color['on']
             )
 
             self.button_close = Button(
                 ax_close,
                 self.labels['close'],
                 color=self.button_color['off'],
-                hovercolor=self.button_color['on']
+#                hovercolor=self.button_color['on']
             )
 
             self.button_play.on_clicked(self.on_play)
@@ -791,51 +720,51 @@ class EventListVisualizer(object):
         plt.close(self.fig)
 
     def on_pick(self, event):
-        if isinstance(event.artist, Rectangle):
-            if self.audio.playing:
-                self.audio.stop()  # Stop current playback
-                try:
-                    self.event_panel_indicator_line.set_visible(False)
-                    self.event_panel_indicator_line.remove()
-                except:
-                    pass
+#        if isinstance(event.artist, Rectangle):
+#            if self.audio.playing:
+#                self.audio.stop()  # Stop current playback
+#                try:
+#                    self.event_panel_indicator_line.set_visible(False)
+#                    self.event_panel_indicator_line.remove()
+#                except:
+#                    pass
+#
+#                if self.animation_event_roll_panel is not None:
+#                    self.animation_event_roll_panel._stop()
+#                    self.animation_event_roll_panel = None
+#
+#                try:
+#                    self.selector_panel_indicator_line.set_visible(False)
+#                    self.selector_panel_indicator_line.remove()
+#                except:
+#                    pass
+#
+#                if self.animation_selector_panel is not None:
+#                    self.animation_selector_panel._stop()
+#                    self.animation_selector_panel = None
+#
+#                try:
+#                    self.highlight_panel_indicator_line.set_visible(False)
+#                    self.highlight_panel_indicator_line.remove()
+#                except:
+#                    pass
+#
+#                if self.animation_highlight_panel is not None:
+#                    self.animation_highlight_panel._stop()
+#                    self.animation_highlight_panel = None
+#                
+#                try:
+#                    self.highlight2_panel_indicator_line.set_visible(False)
+#                    self.highlight2_panel_indicator_line.remove()
+#                except:
+#                    pass  
+#                if self.animation_highlight2_panel is not None:
+#                    self.animation_highlight2_panel._stop()
+#                    self.animation_highlight2_panel = None
+#                    
+#                self.fig.canvas.draw()
 
-                if self.animation_event_roll_panel is not None:
-                    self.animation_event_roll_panel._stop()
-                    self.animation_event_roll_panel = None
-
-                try:
-                    self.selector_panel_indicator_line.set_visible(False)
-                    self.selector_panel_indicator_line.remove()
-                except:
-                    pass
-
-                if self.animation_selector_panel is not None:
-                    self.animation_selector_panel._stop()
-                    self.animation_selector_panel = None
-
-                try:
-                    self.highlight_panel_indicator_line.set_visible(False)
-                    self.highlight_panel_indicator_line.remove()
-                except:
-                    pass
-
-                if self.animation_highlight_panel is not None:
-                    self.animation_highlight_panel._stop()
-                    self.animation_highlight_panel = None
-                
-                try:
-                    self.highlight2_panel_indicator_line.set_visible(False)
-                    self.highlight2_panel_indicator_line.remove()
-                except:
-                    pass  
-                if self.animation_highlight2_panel is not None:
-                    self.animation_highlight2_panel._stop()
-                    self.animation_highlight2_panel = None
-                    
-                self.fig.canvas.draw()
-
-                time.sleep(0.25)  # Wait until playback has stopped
+#                time.sleep(0.25)  # Wait until playback has stopped
 
             self.playback_offset = event.artist.get_x()
             self.audio.play(
@@ -872,17 +801,7 @@ class EventListVisualizer(object):
 #                interval=50,
                 blit=self.use_blit,
                 repeat=False
-            )
-#            self.animation_highlight_panel = animation.FuncAnimation(
-#                   self.fig, 
-#                   self.highlight_panel_play_indicator_update,
-#                   frames=np.linspace(0, 2*np.pi, 128),     #这里的frames在调用update函数是会将frames作为实参传递给“n”
-#                   init_func=self.highlight_panel_play_indicator_init,
-#                   interval=50,
-#                   blit=self.use_blit,
-#                   repeat=False)
-    
-            
+            )              
             self.animation_highlight2_panel = animation.FuncAnimation(
                 self.fig,
                 self.highlight2_panel_play_indicator_update,
@@ -892,7 +811,7 @@ class EventListVisualizer(object):
                 blit=self.use_blit,
                 repeat=False
             )
-            self.fig.canvas.draw()
+#            self.fig.canvas.draw()
 
     def on_select(self, x_min, x_max):
         x_min = int(x_min)
@@ -939,60 +858,67 @@ class EventListVisualizer(object):
 
             self.slider_time.stay_rect.set_visible(True)
 
-        self.fig.canvas.draw()
+#        self.fig.canvas.draw()
 
     def on_play(self, event):
+        self.fig.canvas.draw()
+        print('in on_play: playing is ', self.audio.playing )# F
         if self.audio.playing:
+            
             self.audio.stop()  # Stop current playback
-            try:
-                self.event_panel_indicator_line.set_visible(False)
-                self.event_panel_indicator_line.remove()
-            except:
-                pass
+##            try:
+##                self.event_panel_indicator_line.set_visible(False)
+##                self.event_panel_indicator_line.remove()
+##            except:
+##                pass
+##
+##            if self.animation_event_roll_panel is not None:
+##                self.animation_event_roll_panel._stop()
+##                self.animation_event_roll_panel = None
+##
+##            try:
+##                self.selector_panel_indicator_line.set_visible(False)
+##                self.selector_panel_indicator_line.remove()
+##            except:
+##                pass
+##
+##            if self.animation_selector_panel is not None:
+##                self.animation_selector_panel._stop()
+##                self.animation_selector_panel = None
+#
+##            try:
+##                self.highlight_panel_indicator_line.set_visible(False)
+##                self.highlight_panel_indicator_line.remove()
+##            except:
+##                pass
+#
+##            if self.animation_highlight_panel is not None:
+##                self.animation_highlight_panel._stop()
+##                self.animation_highlight_panel = None
+##                
+##            if self.animation_highlight2_panel is not None:
+##                self.animation_highlight2_panel._stop()
+##                self.animation_highlight2_panel = None
+##            
+#            self.fig.canvas.draw()
 
-            if self.animation_event_roll_panel is not None:
-                self.animation_event_roll_panel._stop()
-                self.animation_event_roll_panel = None
-
-            try:
-                self.selector_panel_indicator_line.set_visible(False)
-                self.selector_panel_indicator_line.remove()
-            except:
-                pass
-
-            if self.animation_selector_panel is not None:
-                self.animation_selector_panel._stop()
-                self.animation_selector_panel = None
-
-            try:
-                self.highlight_panel_indicator_line.set_visible(False)
-                self.highlight_panel_indicator_line.remove()
-            except:
-                pass
-
-            if self.animation_highlight_panel is not None:
-                self.animation_highlight_panel._stop()
-                self.animation_highlight_panel = None
-            if self.animation_highlight2_panel is not None:
-                self.animation_highlight2_panel._stop()
-                self.animation_highlight2_panel = None
-            self.fig.canvas.draw()
-
-            time.sleep(0.25)  # Wait until playback has stopped
+#            time.sleep(0.25)  #Wait until playback has stopped
 
         self.audio.play(
             offset=self.begin_time,
             duration=self.end_time-self.begin_time
         )
-
-        self.button_play.color = self.button_color['on']
-        self.button_play.hovercolor = self.button_color['on']
+       
+#        self.button_play.color = self.button_color['on']
+#        self.button_play.hovercolor = self.button_color['on']
 
         self.button_stop.color = self.button_color['off']
-        self.button_stop.hovercolor = self.button_color['off']
+#        self.button_stop.hovercolor = self.button_color['on']
 
         self.playback_offset = self.begin_time
 
+#        self.fig.canvas.mpl_connect('key_press_event', self.on_pause)#
+        
         self.animation_event_roll_panel = animation.FuncAnimation(
             self.fig,
             self.event_roll_panel_play_indicator_update,
@@ -1022,14 +948,6 @@ class EventListVisualizer(object):
             blit=self.use_blit,
             repeat=False
         )
-#        self.animation_highlight_panel = animation.FuncAnimation(
-#           self.fig, 
-#           self.highlight_panel_play_indicator_update,
-#           frames=np.linspace(0, 2*np.pi, 128),     #这里的frames在调用update函数是会将frames作为实参传递给“n”
-#           init_func=self.highlight_panel_play_indicator_init,
-#           interval=50,
-#           blit=self.use_blit,
-#           repeat=False)
     
         self.animation_highlight2_panel = animation.FuncAnimation(
             self.fig,
@@ -1041,29 +959,47 @@ class EventListVisualizer(object):
             repeat=False
         )
         self.fig.canvas.draw()
-
+        print('in on_play: playing is ', self.audio.playing )# F
+    
     def on_pause(self, event):
-        self.audio.pause()
+        print('before in on_pause: playing is ', self.audio.playing)
+        if self.audio.playing: #T
+            self.audio.pause() #F
+#            print('#pause:', self.audio.get_time())
+            self.animation_selector_panel.event_source.stop()
+            self.animation_highlight_panel.event_source.stop()
+            self.animation_highlight2_panel.event_source.stop()
+            self.animation_event_roll_panel.event_source.stop()
+        else:
+            self.audio.resume()
+            self.animation_selector_panel.event_source.start()
+            self.animation_highlight_panel.event_source.start()
+            self.animation_highlight2_panel.event_source.start()
+            self.animation_event_roll_panel.event_source.start()         
 
-        self.button_play.color = self.button_color['off']
-        self.button_play.hovercolor = self.button_color['off']
-
-        self.button_stop.color = self.button_color['off']
-        self.button_stop.hovercolor = self.button_color['off']
-
-        self.fig.canvas.draw()
-
+#
+##        self.button_play.color = self.button_color['on']
+##        self.button_play.hovercolor = self.button_color['on']
+#
+##        self.button_stop.color = self.button_color['off']
+##        self.button_stop.hovercolor = self.button_color['on']
+        
     def on_stop(self, event):
+#        if self.audio.playing: 
         self.audio.stop()
+        self.animation_selector_panel.event_source.stop()
+        self.animation_highlight_panel.event_source.stop()
+        self.animation_highlight2_panel.event_source.stop()
+        self.animation_event_roll_panel.event_source.stop()
 
-        self.button_play.color = self.button_color['off']
-        self.button_play.hovercolor = self.button_color['off']
+#        self.button_play.color = self.button_color['off']
+#        self.button_play.hovercolor = self.button_color['on']
 
-        self.button_stop.color = self.button_color['off']
-        self.button_stop.hovercolor = self.button_color['off']
+#        self.button_stop.color = self.button_color['on']
+#        self.button_stop.hovercolor = self.button_color['on']
 
-        self.fig.canvas.draw()
-
+#        self.fig.canvas.draw()
+ 
     def on_quit(self, event):
         self._quit = True
         self.on_close_window(event=event)
@@ -1092,14 +1028,16 @@ class EventListVisualizer(object):
     def event_roll_panel_play_indicator_update(self, i):
 #        print(i)#96
         if self.audio.playing:
-            self.event_panel_indicator_line.set_x(self.playback_offset + self.audio.get_time())
-        else:
-            self.event_panel_indicator_line.set_visible(False)
-            if self.animation_event_roll_panel is not None:
-                self.animation_event_roll_panel.event_source.stop()
-                self.animation_event_roll_panel = None
+            self.event_panel_indicator_line.set_x( self.playback_offset +self.audio.get_time())#
+#            print(self.playback_offset)
+#            print(self.audio.get_time())
+#        else:
+#            self.event_panel_indicator_line.set_visible(False)
+#            if self.animation_event_roll_panel is not None:
+#                self.animation_event_roll_panel.event_source.stop()
+#                self.animation_event_roll_panel = None
 
-            self.fig.canvas.draw()
+#        self.fig.canvas.draw()
 
         return self.event_panel_indicator_line,
 
@@ -1118,60 +1056,49 @@ class EventListVisualizer(object):
 
     def selector_panel_play_indicator_update(self,i):
         if self.audio.playing:
-            self.selector_panel_indicator_line.set_x((self.playback_offset + self.audio.get_time())*self.audio.fs)
-        else:
-            self.selector_panel_indicator_line.set_visible(False)
-            if self.animation_selector_panel is not None:
-                self.animation_selector_panel.event_source.stop()
-                self.animation_selector_panel = None
+            self.selector_panel_indicator_line.set_x(( self.audio.get_time())*self.audio.fs)#self.playback_offset +
+#        else:
+#            self.selector_panel_indicator_line.set_visible(False)
+#            if self.animation_selector_panel is not None:
+#                self.animation_selector_panel.event_source.stop()
+#                self.animation_selector_panel = None
 
         return self.selector_panel_indicator_line,
 
     def highlight_panel_play_indicator_init(self):
-
-#        return self.ln,               #返回曲线
         self.ax2 = plt.subplot2grid(shape=(100, 1), loc=(self.highlight_panel_loc, 0), rowspan=self.highlight_panel_height, colspan=1)                    
+        self.ln, = self.ax2.plot([], [], 'r-', animated=False)
         self.ax2.yaxis.set_label_position("right")
-#        self.ax2.set_xlim(0, 2*np.pi)
-        self.ax2.set_ylim(0,1000)
-        return self.ax2,
-#        else:
-#            self.highlight_panel_indicator_line.set_visible(False)
-                            
-
-
-    def highlight_panel_play_indicator_update(self, n):
-#        print(n)
-#        print('I am in')
-#        self.xdata.append(n)         #将每次传过来的n追加到xdata中
-#        self.ydata.append(np.sin(n))
-#        self.ln.set_data(self.xdata, self.ydata)    #重新设置曲线的值
-#        return self.ln
         if self.audio.playing:
             if self.mode == 'spectrogram':
-    #            self.D = self.get_spectrogram(
-    #                audio=self.audio.signal,
-    #                n_fft=self.spec_fft_size,
-    #                win_length=self.spec_win_size,
-    #                hop_length=self.spec_hop_size
-    #            )
-                self.plot_spectrogram(
+                self.ln = self.plot_spectrogram(self,
+                    data=self.audio.signal, t=0,
+                    sampling_rate=self.audio.fs,
+                    interpolation=self.spec_interpolation,
+                    cmap=self.spec_cmap                 
+                )
+                plt.ylabel(self.labels['spectrogram'], fontsize=self.panel_title_font_size)
+        self.ax2.set_ylim(0,250)
+        plt.grid(ls="--")
+        return self.ln, #return line
+    
+
+    def highlight_panel_play_indicator_update(self, n):
+        print(n)
+        if self.audio.playing:
+            if self.mode == 'spectrogram':
+                self.ln = self.plot_spectrogram(self,
                     data=self.audio.signal, t=n,
                     sampling_rate=self.audio.fs,
                     interpolation=self.spec_interpolation,
                     cmap=self.spec_cmap                 
                 )
-                if not self.publication_mode:
-                    self.ax2.yaxis.grid(False, which='major')
-                    self.ax2.yaxis.grid(False, which='minor')
-                    self.ax2.xaxis.grid(False, which='major')
-                    self.ax2.xaxis.grid(False, which='minor')
-    
-                    plt.ylabel(self.labels['spectrogram'], fontsize=self.panel_title_font_size)
-                else:
-                    self.ax2.get_yaxis().set_visible(False)
-            
-        return self.ax2,
+#        else:
+#            self.ln.set_visible(False)
+#            if self.animation_highlight_panel is not None:
+#                self.animation_highlight_panel.event_source.stop()
+#                self.animation_highlight_panel = None
+        return self.ln, #return line
     
     def highlight2_panel_play_indicator_init(self):
         indicator_width = 0.5
@@ -1198,14 +1125,14 @@ class EventListVisualizer(object):
         if self.audio.playing:
             if self.mode == 'spectrogram':
                 self.highlight2_panel_indicator_line.set_x(
-                    (self.playback_offset + self.audio.get_time()) * self.audio.fs / float(self.spec_hop_size)
-                )
+                    ( self.audio.get_time()) * self.audio.fs / float(self.spec_hop_size)
+                )#self.playback_offset +
 
-        else:
-            self.highlight2_panel_indicator_line.set_visible(False)
-            if self.animation_highlight2_panel is not None:
-                self.animation_highlight2_panel.event_source.stop()
-                self.animation_highlight2_panel = None
+#        else:
+#            self.highlight2_panel_indicator_line.set_visible(False)
+#            if self.animation_highlight2_panel is not None:
+#                self.animation_highlight2_panel.event_source.stop()
+#                self.animation_highlight2_panel = None
 
         return self.highlight2_panel_indicator_line,
 
@@ -1291,17 +1218,25 @@ class EventListVisualizer(object):
             S[:, bl_s:bl_t] = scipy.fftpack.fft(fft_window * y_frames[:, bl_s:bl_t], axis=0)[:S.shape[0]].conj()
 #        print(S)
 #        print(numpy.max(S).real)
+#        n = 513
+        
+#        freq = scipy.fftpack.fftfreq(n, d=1.0/sampling_rate)
         magnitude = numpy.abs(S) ** 2
+        mdf = magnitude/2 #513*3446
+        temp = magnitude.transpose()
+        print(temp.shape[0])
+#        print(mdf[0].size)
+#        mnf = numpy.sum(magnitude * freq) / numpy.sum(magnitude) 
+        
 #        print(magnitude)
-        ref = numpy.max(magnitude)  
-#        print(ref)
-        db=librosa.power_to_db(magnitude, ref)#10*log10(magnitude/ref)
-#        print(numpy.max(db))
-#        print('what??',db)
-        return db
+#        mmax = librosa.power_to_db(numpy.max(magnitude) , ref=numpy.min(magnitude))
+#        print('maximum dB value is',mmax)#最大dB值
+        db=librosa.power_to_db(magnitude, ref=numpy.min(magnitude))#10*log10(magnitude/ref)
+        print('maximum dB value is',numpy.max(db))#最大dB值
+        return db, mdf
     
     @staticmethod
-    def plot_spectrogram( data, t, sampling_rate=44100, n_yticks=5, interpolation='nearest', cmap='magma'):
+    def plot_spectrogram(self, data, t, sampling_rate=44100, n_yticks=5, interpolation='nearest', cmap='magma'):
 #        print(a.shape)#(1025,1723)
 #        print(b.shape)#(1025,1723)
 #        print(c.shape)#(1723,1025)
@@ -1331,20 +1266,21 @@ class EventListVisualizer(object):
         c=numpy.transpose(a)#(3446,513)
         x=numpy.arange(0,int(n_fft/2)+1)
         x[0]=1
-        plt.xticks(numpy.arange(1,int(n_fft/2),10))#512
+        plt.xticks(numpy.arange(1,int(n_fft/2),50))#512
        
-        axes = plt.cla()
-        axes=plt.plot(x,c[int(np.floor(t*sampling_rate*0.2/256))])#
+        plt.cla()#axes = 
+        plt.grid(ls="--")
+        self.ln, = self.ax2.plot(x,c[int(np.floor(t*sampling_rate*0.2/256))])#
 #        axes  = plt.hist(c[int(np.floor(t*sampling_rate*0.2/256))])
-#        print(c[500])
-        return axes 
+        return self.ln
      
     @staticmethod
-    def plot_intensity(data, sampling_rate, n_yticks=5, interpolation='nearest', cmap='magma'):    
+    def plot_intensity(self, data, sampling_rate, n_yticks=5, interpolation='nearest', cmap='magma'):    
         axes = librosa.display.specshow(data,
                          sr=sampling_rate, y_axis='log')#, x_axis='time'
 #        axes = plt.imshow(data, aspect='auto', origin='lower', interpolation=interpolation, cmap=plt.get_cmap(cmap))
-#        plt.colorbar(format='%+2.0f dB', ax=self.ax3.ravel().tolist())
+        plt.colorbar(format='%+2.0f dB', ax=self.ax3)
+#        self.fig.colorbar(axes,ax=self.ax3,format='%+2.0f dB')
         # X axis
         plt.xticks([])
 #        print(max(max(data.any())))

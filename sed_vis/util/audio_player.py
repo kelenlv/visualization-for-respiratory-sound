@@ -143,6 +143,11 @@ class AudioPlayer(object):
         if self.playing:
             self.player_thread.pause()
             self.playing = False
+    
+    def resume(self):
+        if not self.playing:
+            self.player_thread.play()
+            self.playing = True
 
     def get_time(self):
         if self.playing:
