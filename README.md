@@ -11,6 +11,8 @@ ___
 ## usage:
 place  modified sed_vis.egg-info in Anaconda/Lib/site-packages/, and run tests/test_sed_visualizer.sh
 ___
+## intro:
+
 1. 整个界面：
 - 可以用户自定义每个面板的X，Y轴数值范围
 - 可以框选ROI并放大或缩小，且可以返回操作
