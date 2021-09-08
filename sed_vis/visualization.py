@@ -1279,7 +1279,10 @@ class EventListVisualizer(object):
         axes = librosa.display.specshow(data,
                          sr=sampling_rate, y_axis='log')#, x_axis='time'
 #        axes = plt.imshow(data, aspect='auto', origin='lower', interpolation=interpolation, cmap=plt.get_cmap(cmap))
-        plt.colorbar(format='%+2.0f dB', ax=self.ax3)
+        cax = self.fig.add_axes([self.ax3.get_position().x1+0.003,self.ax3.get_position().y0,0.01,self.ax3.get_position().height])
+        plt.colorbar(format='%+2.0f dB',  cax=cax) # Similar to fig.colorbar(im, cax = cax)ax=self.ax3,
+
+#        plt.colorbar(format='%+2.0f dB', ax=self.ax3)
 #        self.fig.colorbar(axes,ax=self.ax3,format='%+2.0f dB')
         # X axis
         plt.xticks([])
