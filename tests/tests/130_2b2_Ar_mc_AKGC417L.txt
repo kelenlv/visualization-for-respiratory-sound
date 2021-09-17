@@ -1,0 +1,8 @@
+0.069	2.563	crackles
+2.563	4.933	crackles
+4.933	7.466	crackles
+7.466	10.124	crackles
+10.124	12.707	normal
+12.707	15.078	normal
+15.078	17.615	crackles
+17.615	19.946	crackles
