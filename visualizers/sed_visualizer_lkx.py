@@ -160,6 +160,23 @@ def process_arguments(argv):
     return vars(parser.parse_args(argv[1:]))
 
 
+def write_class_to_txt(pred_class,file):
+    file_data = ""
+    #print (file)
+    with open(file[0], "r") as f:
+        for idx,line in enumerate(f):
+             line=line.strip() 
+             #print (line)
+             line=line.split("\t")
+             print (line)
+             file_data += line[0]+"\t"
+             file_data += line[1]+"\t"
+             file_data += pred_class[idx]
+             file_data += "\n"
+    print (file_data)
+    with open(file[0],"w") as f:
+        f.write(file_data)
+
 def main(argv):
     """
     """
@@ -168,6 +185,8 @@ def main(argv):
     parameters = process_arguments(argv)
     
     pred_class=inference.main(parameters["audio_file"])
+    #print (pred_class)
+    write_class_to_txt(pred_class,parameters["list"])
     
     df, n_add=cal_stat(parameters['list'],pred_class)
     cal_fre(parameters['audio_file'],n_add)
