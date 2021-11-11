@@ -18,6 +18,8 @@ import numpy
 sys.path.append('..')
 import sed_vis
 from inference import inference
+# os.close(sys.stderr.fileno())
+# from inference import inference 
 #__version_info__ = ('0', '1', '0')
 #__version__ = '.'.join(__version_info__)
 def cal_fre(path,n_add):
@@ -34,60 +36,6 @@ def cal_fre(path,n_add):
         print(np.median(mag))
         print(mag[0].shape)
 
-#    
-#    return median
-def cal_stat(l,pred_class):
-    path=l[0]
-#    print(path)
-    with open(path, "r", encoding="utf-8") as f: 
-        crackles=[]
-        t_cra=[]
-        wheezes=[]
-        t_whe=[]
-        both=[]
-        t_both=[]
-        normal=[]
-        t_nor=[]
-        n_add=[]
-        nline=0
-        data=f.readlines()
-#        print(data)
-        for idx,line in enumerate(data): 
-            #print (line)
-            line+=("   "+pred_class[idx])
-            if 'crackles' in line:
-                a=re.findall(r'\d+\.?\d*',line)
-                t=re.findall(r'-?\d+\.?\d*e?-?\d*?',line)
-                crackles.append(float(a[1])-float(a[0]))
-                t_cra.append(float(t[1])-float(t[0]))
-            elif 'wheezes' in line:
-                a=re.findall(r'\d+\.?\d*',line)
-                wheezes.append(float(a[1])-float(a[0]))
-                t=re.findall(r'-?\d+\.?\d*e?-?\d*?',line)
-                t_whe.append(float(t[1])-float(t[0]))
-            elif 'both' in line:
-                a=re.findall(r'\d+\.?\d*',line)
-                both.append(float(a[1])-float(a[0]))
-                t=re.findall(r'-?\d+\.?\d*e?-?\d*?',line)
-                t_both.append(float(t[1])-float(t[0]))
-            elif 'normal' in line:
-                a=re.findall(r'\d+\.?\d*',line)
-                normal.append(float(a[1])-float(a[0]))
-                t=re.findall(r'-?\d+\.?\d*e?-?\d*?',line)
-                n_add.append(t)
-#                print(t)
-                t_nor.append(float(t[1])-float(t[0]))
-            nline+=1  
-        tt=sum(t_both)+sum(t_nor)+sum(t_cra)+sum(t_whe)
-    
-    data = {" ": ['normal','crackles', 'wheezes', 'both'],
-    "number": [len(normal), len(crackles), len(wheezes),len(both)],
-     "total time (s)": [round(sum(t_nor),2), round(sum(t_cra),2), round(sum(t_whe),2),round(sum(t_both),2)],
-     "mean time (s)": [round(np.mean(t_nor),2),round(np.mean(t_cra),2),round(np.mean(t_whe),2),round(np.mean(t_both),2)],
-     "time percentage (%)": [round(sum(t_nor)/tt*100,2),round(sum(t_cra)/tt*100,2),round(sum(t_whe)/tt*100,2),round(sum(t_both)/tt*100,2)]}
-
-    df = pd.DataFrame(data)
-    return df,n_add
 
 def process_arguments(argv):
 
@@ -159,7 +107,6 @@ def process_arguments(argv):
     
     return vars(parser.parse_args(argv[1:]))
 
-
 def write_class_to_txt(pred_class,file):
     file_data = ""
     #print (file)
@@ -187,9 +134,13 @@ def main(argv):
     pred_class=inference.main(parameters["audio_file"])
     #print (pred_class)
     write_class_to_txt(pred_class,parameters["list"])
+    # pred_class=inference.main(parameters["audio_file"])
     
-    df, n_add=cal_stat(parameters['list'],pred_class)
-    cal_fre(parameters['audio_file'],n_add)
+
+    # df, n_add=cal_stat(parameters['list'],pred_class)
+    # df, n_add=cal_stat(parameters['list'])
+
+    # cal_fre(parameters['audio_file'],n_add)
     
     if parameters['spectrogram']:
         mode = 'spectrogram'
@@ -250,6 +201,7 @@ def main(argv):
         minimum_event_length=parameters['minimum_event_length'],
         minimum_event_gap=parameters['minimum_event_gap'],
         publication_mode=publication_mode,
+        para_list=parameters['list'],
     )
 #    print(event_lists.get('reference'))
 #    fig = plt.figure()
@@ -271,7 +223,9 @@ def main(argv):
     if parameters['save_path'] is not None:
         vis.save(parameters['save_path'])
     else:
-        vis.show(df)
+        # vis.show(df)
+        print('prepare to show')
+        vis.show()
     
 
 if __name__ == "__main__":
