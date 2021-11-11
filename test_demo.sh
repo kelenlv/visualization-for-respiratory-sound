@@ -1,0 +1,1 @@
+python ./visualizers/sed_visualizer_lkx.py -a ../inference/130_1p2_Al_mc_AKGC417L.wav -l ../tests/130_1p2_Al_mc_AKGC417L.txt -n reference
