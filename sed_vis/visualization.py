@@ -18,22 +18,29 @@ comparison of the reference and estimated event lists.
 
 """
 from __future__ import print_function, absolute_import
+# import tkinter
+# import matplotlib
+#; matplotlib.use('Gtk3Agg')
+
 from sed_vis.util import AudioPlayer, AudioThread
 import dcase_util
 import numpy 
 import math
 import time
-
+import pandas as pd
+import re
 import scipy.fftpack
 import scipy.signal
 from numpy.lib.stride_tricks import as_strided
-#from sys import platform as _platform
-#import matplotlib
+# from sys import platform as _platform
+# import matplotlib
+# matplotlib.use('TkAgg')
 # if _platform == "darwin":
 #     # MAC OS X
 #     matplotlib.use('TkAgg')
-
 import matplotlib.pyplot as plt
+
+
 import matplotlib.animation as animation
 import matplotlib.patches as patches
 import matplotlib.colors as colors
@@ -150,7 +157,9 @@ class EventListVisualizer(object):
         Nothing
 
         """
-
+        if kwargs.get('para_list', []):
+            self._para_list = kwargs.get('para_list', [])
+            
         if kwargs.get('event_lists', []):
             self._event_lists = kwargs.get('event_lists', [])
 
@@ -237,10 +246,11 @@ class EventListVisualizer(object):
         self.ax3 = None
         self.ax4 = None
         self.ax5 = None
-        self.ax6 = None
+        # self.ax6 = None
         
         self.ln = None
         
+
 #        self.xdata = [] 
 #        self.ydata = [] 
 #        self.ln=None
@@ -257,11 +267,13 @@ class EventListVisualizer(object):
         self.animation_selector_panel = None
         self.animation_highlight_panel = None
         self.animation_highlight2_panel = None
+        self.animation_table_panel = None
 
         self.event_panel_indicator_line = None
         self.selector_panel_indicator_line = None
         self.highlight_panel_indicator_line = None
         self.highlight2_panel_indicator_line = None
+        self.table_panel_indicator_line = None
 
         self.slider_time = None
 
@@ -312,77 +324,9 @@ class EventListVisualizer(object):
         self.fig_shape = (14, 10)
 
         self._quit = False
-
-#        if self.publication_mode:
-#            self.panel_title_font_size = 14
-#            self.legend_font_size = 16
-#            self.event_roll_time_font_size = 12
-#
-#            self.spec_cmap = 'magma_r'
-#            self.spec_interpolation = 'bicubic'
-#            if not self.waveform_selector_point_hop:
-#                self.waveform_selector_point_hop = 5000
-#            self.waveform_highlight_point_hop = 500
-#            self.waveform_highlight_color = 'black'
-#            if self.show_selector:
-#                if self.mode == 'time_domain':
-#                    self.fig_shape = (30, 4)
-#
-#                elif self.mode == 'spectrogram':
-#                    self.fig_shape = (20, 5)
-#
-#                if self._event_lists:
-#                    if self.event_label_count == 1:
-#                        self.selector_panel_height = 10
-#                        self.highlight_panel_height = 33
-#                        self.event_roll_panel_height = 33
-#
-#                        self.selector_panel_loc = 0
-#                        self.highlight_panel_loc = 17
-#                        self.event_roll_panel_loc = 53
-#
-#                        self.event_roll_time_font_size = 16
-#
-#                    else:
-#                        self.selector_panel_height = 10
-#                        self.highlight_panel_height = 15
-#                        self.event_roll_panel_height = 60
-#
-#                        self.selector_panel_loc = 0
-#                        self.highlight_panel_loc = 17
-#                        self.event_roll_panel_loc = 35
-#
-#                else:
-#                    self.selector_panel_height = 30
-#                    self.highlight_panel_height = 66
-#                    self.event_roll_panel_height = 0
-#
-#                    self.selector_panel_loc = 0
-#                    self.highlight_panel_loc = 37
-#                    self.event_roll_panel_loc = 0
-#
-#                    self.event_roll_time_font_size = 16
-#
-#            else:
-#                if self.mode == 'time_domain':
-#                    self.fig_shape = (30, 4)
-#
-#                elif self.mode == 'spectrogram':
-#                    self.fig_shape = (20, 4)
-#
-#                self.selector_panel_height = 15
-#                self.highlight_panel_height = 15
-#                self.event_roll_panel_height = 75
-#
-#                self.selector_panel_loc = 0
-#                self.highlight_panel_loc = 0
-#                self.event_roll_panel_loc = 17
-#
-#            self.event_roll_item_opacity = 1.0
-
         self.label_colormap = cm.get_cmap(name=kwargs.get('event_roll_cmap','rainbow'))
 
-    def generate_GUI(self, df):
+    def generate_GUI(self):
         """Generates the visualizer GUI.
 
         """
@@ -628,11 +572,15 @@ class EventListVisualizer(object):
 #        plt.text(0, 1, self._event_lists.get('reference').to_string(show_info=False,show_data=False,show_stats=True) , fontsize=12, style='oblique', ha='center',va='top',wrap=True)
         self.ax5.axis("off")
         self.ax5.axis("tight")
-#        self.ax5 = plt.subplot2grid(shape=(100, 2), loc=(self.display_panel_loc, 0.5), rowspan=self.display_panel_height, colspan=2)
-        self.ax5.table(cellText=df.values, colLabels=df.columns,  cellLoc='center',loc='best')
-#    
-        self.ax5.set_xticks([])
-        self.ax5.set_yticks([])
+        # print('#debug:',self.audio.get_time())
+        # print('#debug2:',self._para_list)#txt path
+        # dd, data=self.find_dd(self._para_list, self.audio.get_time())
+        # df=self.cal_stat(-1, data)
+        # # df.plot
+        # self.ax5.table(cellText=df.values, colLabels=df.columns,  cellLoc='center',loc='best')
+        # self.ax5.set_xticks([])
+        # self.ax5.set_yticks([])
+        # self.ax5.set_axis_off()
 #        plt.ylabel('test', fontsize=self.panel_title_font_size)
 #        self.ax5.yaxis.set_label_position('right')
 
@@ -700,11 +648,11 @@ class EventListVisualizer(object):
         if self.auto_play:
             self.on_play(None)
 
-    def show(self,df):
+    def show(self):
         """Shows the visualizer.
 
         """
-        self.generate_GUI(df)
+        self.generate_GUI()
         plt.show()
 
     def save(self, filename=None):
@@ -801,7 +749,17 @@ class EventListVisualizer(object):
 #                interval=50,
                 blit=self.use_blit,
                 repeat=False
-            )              
+            )      
+            
+            self.animation_table_panel = animation.FuncAnimation(
+                self.fig,
+                self.table_panel_play_indicator_update,
+#                frames= np.arange(self.audio.signal.shape[0]/self.audio.fs),# t=20s
+                init_func=self.table_panel_play_indicator_init,
+#                interval=50,
+                # blit=self.use_blit,
+                repeat=False
+            )         
             self.animation_highlight2_panel = animation.FuncAnimation(
                 self.fig,
                 self.highlight2_panel_play_indicator_update,
@@ -948,7 +906,16 @@ class EventListVisualizer(object):
             blit=self.use_blit,
             repeat=False
         )
-    
+      
+        self.animation_table_panel = animation.FuncAnimation(
+            self.fig,
+            self.table_panel_play_indicator_update,
+#            frames= np.arange(self.audio.signal.shape[0]/self.audio.fs),# t=20s
+            init_func=self.table_panel_play_indicator_init,
+#            interval=50,
+            # blit=self.use_blit,
+            repeat=False
+        )   
         self.animation_highlight2_panel = animation.FuncAnimation(
             self.fig,
             self.highlight2_panel_play_indicator_update,
@@ -970,12 +937,14 @@ class EventListVisualizer(object):
             self.animation_highlight_panel.event_source.stop()
             self.animation_highlight2_panel.event_source.stop()
             self.animation_event_roll_panel.event_source.stop()
+            self.animation_table_panel.event_source.stop()
         else:
             self.audio.resume()
             self.animation_selector_panel.event_source.start()
             self.animation_highlight_panel.event_source.start()
             self.animation_highlight2_panel.event_source.start()
-            self.animation_event_roll_panel.event_source.start()         
+            self.animation_event_roll_panel.event_source.start() 
+            self.animation_table_panel.event_source.start()          
 
 #
 ##        self.button_play.color = self.button_color['on']
@@ -991,6 +960,7 @@ class EventListVisualizer(object):
         self.animation_highlight_panel.event_source.stop()
         self.animation_highlight2_panel.event_source.stop()
         self.animation_event_roll_panel.event_source.stop()
+        self.animation_table_panel.event_source.stop()
 
 #        self.button_play.color = self.button_color['off']
 #        self.button_play.hovercolor = self.button_color['on']
@@ -1021,23 +991,13 @@ class EventListVisualizer(object):
             facecolor=self.indicator_line_color,
             alpha=0.8
         )
-
+        # print(aa)#Rectangle
         self.ax4.add_patch(self.event_panel_indicator_line)
         return self.event_panel_indicator_line,
 
     def event_roll_panel_play_indicator_update(self, i):
-#        print(i)#96
         if self.audio.playing:
             self.event_panel_indicator_line.set_x( self.playback_offset +self.audio.get_time())#
-#            print(self.playback_offset)
-#            print(self.audio.get_time())
-#        else:
-#            self.event_panel_indicator_line.set_visible(False)
-#            if self.animation_event_roll_panel is not None:
-#                self.animation_event_roll_panel.event_source.stop()
-#                self.animation_event_roll_panel = None
-
-#        self.fig.canvas.draw()
 
         return self.event_panel_indicator_line,
 
@@ -1057,6 +1017,7 @@ class EventListVisualizer(object):
     def selector_panel_play_indicator_update(self,i):
         if self.audio.playing:
             self.selector_panel_indicator_line.set_x(( self.audio.get_time())*self.audio.fs)#self.playback_offset +
+
 #        else:
 #            self.selector_panel_indicator_line.set_visible(False)
 #            if self.animation_selector_panel is not None:
@@ -1082,9 +1043,38 @@ class EventListVisualizer(object):
         plt.grid(ls="--")
         return self.ln, #return line
     
+    def table_panel_play_indicator_init(self):
+        # self.table_panel_indicator_line = patches.Rectangle(
+        #     (0, -1),
+        #     height=2,
+        #     width=0.5,
+        #     edgecolor=self.indicator_line_color,
+        #     facecolor=self.indicator_line_color,
+        #     alpha=0.8
+        # )
+
+        # self.ax5.add_patch(self.table_panel_indicator_line)
+
+        # self.ax5 = plt.subplot2grid(shape=(100, 1), loc=(self.display_panel_loc, 0), rowspan=self.display_panel_height, colspan=1)   
+#        plt.text(0, 1, self._event_lists.get('reference').to_string(show_info=False,show_data=False,show_stats=True) , fontsize=12, style='oblique', ha='center',va='top',wrap=True)
+        # print('#init:',self.audio.get_time())
+        # print('#debug2:',self._para_list)#txt path
+        _, data=self.find_dd(self._para_list, self.audio.get_time())
+        self.df = self.cal_stat(-1, data)
+        self.ax5.table(cellText=self.df.values, colLabels=self.df.columns,  cellLoc='center',loc='best')
+        # print(aa)#matplotlib.table.Table object 
+        # self.ax5.set_xticks([])
+        # self.ax5.set_yticks([])
+        # plt.plot()
+        # print(self.ax5)#AxesSubplot(0.125,0.11;0.775x0.0681302)
+        self.ax5.axis('off')
+        # plt.show()
+        # print(self.table_panel_indicator_line)
+        # print('init done!')
+        return self.table_panel_indicator_line,
 
     def highlight_panel_play_indicator_update(self, n):
-        print(n)
+        # print(n)
         if self.audio.playing:
             if self.mode == 'spectrogram':
                 self.ln = self.plot_spectrogram(self,
@@ -1099,7 +1089,26 @@ class EventListVisualizer(object):
 #                self.animation_highlight_panel.event_source.stop()
 #                self.animation_highlight_panel = None
         return self.ln, #return line
-    
+
+    def table_panel_play_indicator_update(self, n):
+        # print(n)
+        if self.audio.playing:
+            # self.table_panel_indicator_line.set_x(( self.audio.get_time())*self.audio.fs)#self.playback_offset +
+            # plt.cla()
+            if self.mode == 'spectrogram':
+                self.ax5 = plt.subplot2grid(shape=(100, 1), loc=(self.display_panel_loc, 0), rowspan=self.display_panel_height, colspan=1)   
+                # print("#update:",self.audio.get_time())
+                dd, data=self.find_dd(self._para_list, self.audio.get_time())
+                # print("#update:dd:", dd)
+                self.df = self.cal_stat(dd, data)
+                self.ln = self.ax5.table(cellText=self.df.values, colLabels=self.df.columns,  cellLoc='center',loc='best')
+                # print(aa)
+                # self.ax5.set_xticks([])
+                # self.ax5.set_yticks([])
+                self.ax5.axis('off')
+                # plt.show()
+        return self.table_panel_indicator_line, #return line
+
     def highlight2_panel_play_indicator_init(self):
         indicator_width = 0.5
         if self.mode == 'spectrogram':
@@ -1285,7 +1294,8 @@ class EventListVisualizer(object):
 #        plt.colorbar(format='%+2.0f dB', ax=self.ax3)
 #        self.fig.colorbar(axes,ax=self.ax3,format='%+2.0f dB')
         # X axis
-        plt.xticks([])
+        # plt.xticks([])
+        # plt.set_ticks()
 #        print(max(max(data.any())))
         # Y axis
 #        positions = numpy.linspace(0, data.shape[0]-1, n_yticks, endpoint=True).astype(int)
@@ -1299,4 +1309,85 @@ class EventListVisualizer(object):
 #        plt.yticks(positions, values[t_inv[positions]])
 
         return axes
+    
+    @staticmethod
+    def cal_stat(dd,data):
+        # path=l[0]
+    #    print(path)
+        # with open(path, "r", encoding="utf-8") as f: 
+        crackles=[]
+        t_cra=[0]
+        wheezes=[]
+        t_whe=[0]
+        both=[]
+        t_both=[0]
+        normal=[]
+        t_nor=[0]
+        n_add=[]
+        
+        nline=0
+            # data=f.readlines()
+            # print(data)
+        # print("dd:",dd)
+        for idx,line in enumerate(data): 
+            # print(idx)
+            # line+=("   "+pred_class[idx])
+            if idx<=dd:
+                print (line)
+                if 'crackles' in line:
+                    a=re.findall(r'\d+\.?\d*',line)
+                    t=re.findall(r'-?\d+\.?\d*e?-?\d*?',line)
+                    crackles.append(float(a[1])-float(a[0]))
+                    t_cra.append(float(t[1])-float(t[0]))
+                    # print(t_cra)
+                elif 'wheezes' in line:
+                    a=re.findall(r'\d+\.?\d*',line)
+                    wheezes.append(float(a[1])-float(a[0]))
+                    t=re.findall(r'-?\d+\.?\d*e?-?\d*?',line)
+                    t_whe.append(float(t[1])-float(t[0]))
+                elif 'both' in line:
+                    a=re.findall(r'\d+\.?\d*',line)
+                    both.append(float(a[1])-float(a[0]))
+                    t=re.findall(r'-?\d+\.?\d*e?-?\d*?',line)
+                    t_both.append(float(t[1])-float(t[0]))
+                elif 'normal' in line:
+                    a=re.findall(r'\d+\.?\d*',line)
+                    normal.append(float(a[1])-float(a[0]))
+                    t=re.findall(r'-?\d+\.?\d*e?-?\d*?',line)
+                    n_add.append(t)
+    #                print(t)
+                    t_nor.append(float(t[1])-float(t[0]))
+                nline+=1  
+        
+        tt=sum(t_both)+sum(t_nor)+sum(t_cra)+sum(t_whe)
+        # print(tt)
+        if tt>0:
+            data = {" ": ['normal','crackles', 'wheezes', 'both'],
+            "number": [len(normal), len(crackles), len(wheezes),len(both)],
+            "total time (s)": [round(sum(t_nor),2), round(sum(t_cra),2), round(sum(t_whe),2),round(sum(t_both),2)],
+            "mean time (s)": [round(np.mean(t_nor),2),round(np.mean(t_cra),2),round(np.mean(t_whe),2),round(np.mean(t_both),2)],
+            "time percentage (%)": [round(sum(t_nor)/tt*100,2),round(sum(t_cra)/tt*100,2),round(sum(t_whe)/tt*100,2),round(sum(t_both)/tt*100,2)]}
+        else:
+            data = {" ": ['normal','crackles', 'wheezes', 'both'],
+            "number": [0, 0, 0,0],
+            "total time (s)": [0, 0, 0,0],
+            "mean time (s)": [0,0,0,0],
+            "time percentage (%)": [0,0,0,0]}
+        df = pd.DataFrame(data)
+        return df  #,n_add
 
+    @staticmethod
+    def find_dd(l,tt):
+        path=l[0]
+        a=[]
+        dd=0
+        with open(path, "r", encoding="utf-8") as f: 
+            data=f.readlines()
+            for line in data:
+                t=re.findall(r'-?\d+\.?\d*e?-?\d*?',line)
+                a.append(t[1])
+                a_len=np.size(a)
+            for i in range(a_len-1):
+                if tt > float(a[i]):
+                    dd+=1
+        return dd,data
