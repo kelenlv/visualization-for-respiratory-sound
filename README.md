@@ -7,7 +7,5 @@ This repo is mainly adapted from [sed_vis - Visualization toolbox for Sound Even
  - Redefinition of the spectrogram and new definition of the Log-Power spectrogram. 
  - New panel with  the Log-Power spectrogram. 
 
-___
-## usage:
-place  modified sed_vis.egg-info in Anaconda/Lib/site-packages/, and run tests/test_sed_visualizer.sh
+
 
